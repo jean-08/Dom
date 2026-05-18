@@ -1,0 +1,134 @@
+<?php
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Demande.php';
+require_once __DIR__ . '/../models/Service.php';
+require_once __DIR__ . '/../models/Intervention.php';
+
+class AdminController {
+    private User $user;
+    private Demande $demande;
+    private Service $service;
+    private Intervention $intervention;
+
+    public function __construct() {
+        $this->user = new User();
+        $this->demande = new Demande();
+        $this->service = new Service();
+        $this->intervention = new Intervention();
+    }
+
+    private function requireAdmin(): void {
+        if (($_SESSION['user']['role'] ?? '') !== 'admin') {
+            header('Location: index.php?action=dashboard');
+            exit;
+        }
+    }
+
+    public function dashboard(): void {
+        $this->requireAdmin();
+        $users = $this->user->all();
+        $demandes = $this->demande->all();
+        $services = $this->service->all();
+        $interventions = $this->intervention->all();
+        
+        $totalUsers = count($users);
+        $totalDemandes = count($demandes);
+        $totalServices = count($services);
+        $totalInterventions = count($interventions);
+        
+        require __DIR__ . '/../views/admin/dashboard.php';
+    }
+
+    public function users(): void {
+        $this->requireAdmin();
+        $users = $this->user->all();
+        require __DIR__ . '/../views/admin/users.php';
+    }
+
+    public function deleteUser(): void {
+        $this->requireAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        
+        if ($id === (int)($_SESSION['user']['id_user'] ?? 0)) {
+            $_SESSION['error'] = 'Vous ne pouvez pas supprimer votre propre compte.';
+            header('Location: index.php?action=admin_users');
+            exit;
+        }
+
+        $this->user->delete($id);
+        $_SESSION['success'] = 'Utilisateur supprimé avec succès.';
+        header('Location: index.php?action=admin_users');
+        exit;
+    }
+
+    public function profile(): void {
+        $this->requireAdmin();
+        $id = (int)($_SESSION['user']['id_user'] ?? 0);
+        $admin = $this->user->find($id);
+
+        if (!$admin) {
+            header('Location: index.php?action=dashboard');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $ancien_mdp = $_POST['ancien_mdp'] ?? '';
+            $nouveau_mdp = $_POST['nouveau_mdp'] ?? '';
+            $confirmer_mdp = $_POST['confirmer_mdp'] ?? '';
+
+            if (empty($ancien_mdp) || empty($nouveau_mdp) || empty($confirmer_mdp)) {
+                $_SESSION['error'] = 'Tous les champs sont requis.';
+                header('Location: index.php?action=admin_profile');
+                exit;
+            }
+
+            if (!password_verify($ancien_mdp, $admin['mot_de_passe'])) {
+                $_SESSION['error'] = 'Ancien mot de passe incorrect.';
+                header('Location: index.php?action=admin_profile');
+                exit;
+            }
+
+            if ($nouveau_mdp !== $confirmer_mdp) {
+                $_SESSION['error'] = 'Les nouveaux mots de passe ne correspondent pas.';
+                header('Location: index.php?action=admin_profile');
+                exit;
+            }
+
+            if (strlen($nouveau_mdp) < 6) {
+                $_SESSION['error'] = 'Le mot de passe doit contenir au moins 6 caractères.';
+                header('Location: index.php?action=admin_profile');
+                exit;
+            }
+
+            // Mettre à jour le mot de passe
+            $db = Database::getInstance();
+            $s = $db->prepare("UPDATE user SET mot_de_passe=? WHERE id_user=?");
+            $s->execute([password_hash($nouveau_mdp, PASSWORD_BCRYPT), $id]);
+
+            $_SESSION['success'] = 'Mot de passe modifié avec succès.';
+            header('Location: index.php?action=admin_profile');
+            exit;
+        }
+
+        require __DIR__ . '/../views/admin/profile.php';
+    }
+
+    public function suiviDemandes(): void {
+        $this->requireAdmin();
+        $demandes = $this->demande->all();
+        require __DIR__ . '/../views/admin/suivi-demandes.php';
+    }
+
+    public function suiviServices(): void {
+        $this->requireAdmin();
+        $services = $this->service->all();
+        require __DIR__ . '/../views/admin/suivi-services.php';
+    }
+
+    public function suiviInterventions(): void {
+        $this->requireAdmin();
+        $interventions = $this->intervention->all();
+        require __DIR__ . '/../views/admin/suivi-interventions.php';
+    }
+}

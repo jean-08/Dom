@@ -1,0 +1,65 @@
+DomAssist/
+├── config/
+│   └── database.php
+├── models/
+│   ├── User.php
+│   ├── Prestataire.php
+│   ├── Demande.php
+│   ├── Diagnostic.php
+│   ├── Intervention.php
+│   ├── Disponibilite.php
+│   ├── Service.php
+│   ├── Solution.php
+│   ├── Produit.php
+│   └── Avis.php
+├── controllers/
+│   ├── AuthController.php
+│   ├── UserController.php
+│   ├── PrestataireController.php
+│   ├── DemandeController.php
+│   ├── DiagnosticController.php
+│   ├── InterventionController.php
+│   ├── DisponibiliteController.php
+│   ├── ServiceController.php
+│   ├── SolutionController.php
+│   ├── ProduitController.php
+│   └── AvisController.php
+├── views/
+│   ├── layout/
+│   │   ├── header.php
+│   │   └── footer.php
+│   ├── auth/
+│   │   ├── login.php
+│   │   └── register.php
+│   ├── user/
+│   │   ├── index.php
+│   │   └── edit.php
+│   ├── prestataire/
+│   │   ├── index.php
+│   │   └── edit.php
+│   ├── demande/
+│   │   ├── index.php
+│   │   ├── create.php
+│   │   └── show.php
+│   ├── diagnostic/
+│   │   ├── create.php
+│   │   └── show.php
+│   ├── intervention/
+│   │   ├── index.php
+│   │   └── create.php
+│   ├── disponibilite/
+│   │   └── index.php
+│   ├── service/
+│   │   └── index.php
+│   ├── solution/
+│   │   └── create.php
+│   ├── produit/
+│   │   └── index.php
+│   └── avis/
+│       └── create.php
+├── public/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── app.js
+└── index.php
