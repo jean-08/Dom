@@ -25,41 +25,5 @@ DomAssist/
 │   ├── ProduitController.php
 │   └── AvisController.php
 ├── views/
-│   ├── layout/
-│   │   ├── header.php
-│   │   └── footer.php
-│   ├── auth/
-│   │   ├── login.php
-│   │   └── register.php
-│   ├── user/
-│   │   ├── index.php
-│   │   └── edit.php
-│   ├── prestataire/
-│   │   ├── index.php
-│   │   └── edit.php
-│   ├── demande/
-│   │   ├── index.php
-│   │   ├── create.php
-│   │   └── show.php
-│   ├── diagnostic/
-│   │   ├── create.php
-│   │   └── show.php
-│   ├── intervention/
-│   │   ├── index.php
-│   │   └── create.php
-│   ├── disponibilite/
-│   │   └── index.php
-│   ├── service/
-│   │   └── index.php
-│   ├── solution/
-│   │   └── create.php
-│   ├── produit/
-│   │   └── index.php
-│   └── avis/
-│       └── create.php
+
 ├── public/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
-└── index.php

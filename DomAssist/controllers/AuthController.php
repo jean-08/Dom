@@ -16,12 +16,33 @@ class AuthController {
             $u = $this->user->findByEmail($email);
             if ($u && password_verify($mdp, $u['mot_de_passe'])) {
                 $_SESSION['user'] = $u;
+                if (!empty($u['suspendu'])) {
+                    header('Location: index.php?action=compte_suspendu');
+                    exit;
+                }
                 $redirect = $u['role'] === 'admin' ? 'admin_dashboard' : 'dashboard';
-                header('Location: index.php?action=' . $redirect); exit;            }
+                header('Location: index.php?action=' . $redirect); exit;
+            }
             $_SESSION['error'] = 'Identifiants incorrects.';
             header('Location: index.php?action=login'); exit;
         }
         require __DIR__ . '/../views/auth/login.php';
+    }
+
+    public function suspended(): void {
+        if (empty($_SESSION['user'])) {
+            header('Location: index.php?action=login');
+            exit;
+        }
+        $u = $this->user->find((int)$_SESSION['user']['id_user']);
+        if ($u) {
+            $_SESSION['user'] = array_merge($_SESSION['user'], $u);
+        }
+        if (empty($_SESSION['user']['suspendu'])) {
+            header('Location: index.php?action=dashboard');
+            exit;
+        }
+        require __DIR__ . '/../views/auth/suspended.php';
     }
 
     public function register(): void {
@@ -30,7 +51,10 @@ class AuthController {
                 'nom'         => trim($_POST['nom'] ?? ''),
                 'prenom'      => trim($_POST['prenom'] ?? ''),
                 'email'       => trim($_POST['email'] ?? ''),
-                'role'        => $_POST['role'] ?? 'client',
+                // Le rôle n'est jamais pris depuis le formulaire : tout compte créé
+                // publiquement est "client" par défaut (cf. CDC v2). Devenir prestataire
+                // passe par une candidature dédiée, soumise à validation admin.
+                'role'        => 'client',
                 'mot_de_passe'=> $_POST['mot_de_passe'] ?? ''
             ];
             if (in_array('', $d, true)) {

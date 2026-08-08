@@ -1,30 +1,151 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-class Service {
-    private PDO $db;
-    public function __construct() { $this->db = Database::getInstance(); }
 
-    public function all(): array {
-        return $this->db->query("SELECT * FROM service")->fetchAll();
+/**
+ * Façade de compatibilité V3 — pointe vers service_category + competence.
+ *
+ * Les controllers appellent new Service() et s'attendent à des colonnes :
+ *   id_service, nom, description, niveau
+ * Ce modèle traduit ces appels vers la structure V3 sans toucher aux controllers.
+ *
+ * Correspondances de colonnes :
+ *   id_service   → id_category
+ *   nom          → libelle
+ *   (description n'existe plus dans service_category — retournée comme null)
+ *
+ * Pour les compétences :
+ *   id_prestataire → id_profile (via prestataire_profile)
+ *   avoir_une_competence → competence
+ */
+class Service
+{
+    private PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
     }
-    public function find(int $id): array|false {
-        $s = $this->db->prepare("SELECT * FROM service WHERE id_service=?");
-        $s->execute([$id]); return $s->fetch();
+
+    // -----------------------------------------------------------------------
+    // CRUD catégories (ancienne interface service)
+    // -----------------------------------------------------------------------
+
+    /** Toutes les catégories actives, triées par ordre. */
+    public function all(): array
+    {
+        return $this->db->query("
+            SELECT id_category AS id_service, libelle AS nom, NULL AS description, ordre
+            FROM service_category
+            WHERE actif = true
+            ORDER BY ordre ASC
+        ")->fetchAll();
     }
-    public function create(array $d): bool {
-        $s = $this->db->prepare("INSERT INTO service (nom,description) VALUES (?,?)");
-        return $s->execute([$d['nom'],$d['description']]);
+
+    /** Trouver par id (alias id_service → id_category). */
+    public function find(int $id): array|false
+    {
+        $s = $this->db->prepare("
+            SELECT id_category AS id_service, libelle AS nom, NULL AS description, ordre, actif
+            FROM service_category WHERE id_category = ?
+        ");
+        $s->execute([$id]);
+        return $s->fetch();
     }
-    public function delete(int $id): bool {
-        $s = $this->db->prepare("DELETE FROM service WHERE id_service=?");
+
+    /**
+     * Créer une catégorie (admin).
+     * Dans le modèle V3, l'admin peut créer une catégorie via cette méthode.
+     * Le code est généré depuis le libellé (slug minuscule).
+     */
+    public function create(array $d): bool
+    {
+        $libelle = $d['nom'] ?? $d['libelle'] ?? '';
+        // Générer un code slug depuis le libellé
+        $code = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $libelle));
+        $code = trim($code, '_');
+
+        $s = $this->db->prepare("
+            INSERT INTO service_category (code, libelle, actif, ordre)
+            VALUES (?, ?, true, (SELECT COALESCE(MAX(ordre), 0) + 1 FROM service_category))
+            ON CONFLICT (code) DO NOTHING
+        ");
+        return $s->execute([$code, $libelle]);
+    }
+
+    public function update(int $id, array $d): bool
+    {
+        $libelle = $d['nom'] ?? $d['libelle'] ?? '';
+        $s = $this->db->prepare("
+            UPDATE service_category SET libelle = ? WHERE id_category = ?
+        ");
+        return $s->execute([$libelle, $id]);
+    }
+
+    public function delete(int $id): bool
+    {
+        // Désactivation plutôt que suppression physique (évite les FK cassées)
+        $s = $this->db->prepare("
+            UPDATE service_category SET actif = false WHERE id_category = ?
+        ");
         return $s->execute([$id]);
     }
-    public function byPrestataire(int $id): array {
-        $s = $this->db->prepare("SELECT s.*,ac.niveau FROM service s JOIN avoir_une_competence ac ON s.id_service=ac.id_service WHERE ac.id_prestataire=?");
-        $s->execute([$id]); return $s->fetchAll();
+
+    public function lastId(): int
+    {
+        return (int) $this->db->lastInsertId();
     }
-    public function addCompetence(int $id_prest, int $id_serv, string $niveau): bool {
-        $s = $this->db->prepare("INSERT IGNORE INTO avoir_une_competence (id_prestataire,id_service,niveau) VALUES (?,?,?)");
-        return $s->execute([$id_prest,$id_serv,$niveau]);
+
+    // -----------------------------------------------------------------------
+    // Compétences (ancienne interface avoir_une_competence)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Catégories/compétences d'un prestataire.
+     * Accepte un id_prestataire (= id_profile dans V3).
+     */
+    public function byPrestataire(int $id_prestataire): array
+    {
+        $s = $this->db->prepare("
+            SELECT sc.id_category AS id_service, sc.libelle AS nom,
+                   NULL AS description, c.niveau
+            FROM service_category sc
+            JOIN competence c ON sc.id_category = c.id_category
+            WHERE c.id_profile = ?
+            ORDER BY sc.ordre ASC
+        ");
+        $s->execute([$id_prestataire]);
+        return $s->fetchAll();
+    }
+
+    /**
+     * Ajoute ou met à jour une compétence (upsert).
+     * id_prestataire = id_profile dans V3.
+     */
+    public function addCompetence(int $id_prestataire, int $id_service, string $niveau): bool
+    {
+        $s = $this->db->prepare("
+            INSERT INTO competence (id_profile, id_category, niveau)
+            VALUES (?, ?, ?)
+            ON CONFLICT (id_profile, id_category) DO UPDATE SET niveau = EXCLUDED.niveau
+        ");
+        return $s->execute([$id_prestataire, $id_service, $niveau]);
+    }
+
+    public function removeCompetence(int $id_prestataire, int $id_service): bool
+    {
+        $s = $this->db->prepare("
+            DELETE FROM competence WHERE id_profile = ? AND id_category = ?
+        ");
+        $s->execute([$id_prestataire, $id_service]);
+        return $s->rowCount() > 0;
+    }
+
+    public function hasCompetence(int $id_prestataire, int $id_service): bool
+    {
+        $s = $this->db->prepare("
+            SELECT 1 FROM competence WHERE id_profile = ? AND id_category = ?
+        ");
+        $s->execute([$id_prestataire, $id_service]);
+        return (bool) $s->fetch();
     }
 }

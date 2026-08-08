@@ -13,9 +13,9 @@ class Database {
             try {
 
                 self::$instance = new PDO(
-                    "mysql:host=localhost;dbname=DomAssist;charset=utf8mb4",
+                    "pgsql:host=localhost;dbname=domassist",
                     "xyra",
-                    "!",
+                    "a",
                     [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

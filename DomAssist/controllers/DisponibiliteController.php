@@ -12,13 +12,21 @@ class DisponibiliteController {
     }
 
     public function index(): void {
-        $prest = $this->prest->findByUser((int)$_SESSION['user']['id_user']);
-        $dispos = $prest ? $this->dispo->byPrestataire($prest['id_prestataire']) : [];
+        $prest = $this->prest->findByUser((int)($_SESSION['user']['id_user'] ?? 0));
+        if (!$prest || ($prest['statut_validation'] ?? '') !== 'validee') {
+            $_SESSION['error'] = 'Vous devez être un prestataire validé pour gérer vos disponibilités.';
+            header('Location: index.php?action=dashboard'); exit;
+        }
+        $dispos = $this->dispo->byPrestataire($prest['id_prestataire']);
         require __DIR__ . '/../views/disponibilite/index.php';
     }
 
     public function create(): void {
-        $prest = $this->prest->findByUser((int)$_SESSION['user']['id_user']);
+        $prest = $this->prest->findByUser((int)($_SESSION['user']['id_user'] ?? 0));
+        if (!$prest || ($prest['statut_validation'] ?? '') !== 'validee') {
+            $_SESSION['error'] = 'Vous devez être un prestataire validé pour ajouter une disponibilité.';
+            header('Location: index.php?action=dashboard'); exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $d = [
                 'date'           => $_POST['date'] ?? '',
@@ -34,8 +42,13 @@ class DisponibiliteController {
     }
 
     public function delete(): void {
+        $prest = $this->prest->findByUser((int)($_SESSION['user']['id_user'] ?? 0));
+        if (!$prest || ($prest['statut_validation'] ?? '') !== 'validee') {
+            header('Location: index.php?action=dashboard'); exit;
+        }
         $id = (int)($_GET['id'] ?? 0);
         $this->dispo->delete($id);
+        $_SESSION['success'] = 'Disponibilité supprimée.';
         header('Location: index.php?action=disponibilites'); exit;
     }
 }

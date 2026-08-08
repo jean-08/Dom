@@ -1,0 +1,292 @@
+Acteurs
+Visiteur
+Client
+Prestataire
+Administrateur
+
+Un utilisateur peut avoir les rôles Client et Prestataire en même temps.
+
+UC01 – Créer un compte
+
+Acteur : Visiteur
+
+Le visiteur crée un compte.
+
+Résultat :
+
+devient Client.
+UC02 – Se connecter
+
+Acteur : Utilisateur
+
+Connexion.
+
+Le tableau de bord dépend des rôles.
+
+UC03 – Modifier son profil
+
+Acteur :
+
+Client
+Prestataire
+UC04 – Devenir prestataire
+
+Acteur :
+
+Client
+
+Le client dépose une demande.
+
+L'administrateur :
+
+accepte
+
+ou
+
+refuse
+
+Une fois accepté :
+
+Le client possède maintenant aussi le rôle Prestataire.
+
+UC05 – Créer une demande
+
+Acteur :
+
+Client
+
+Le client décrit :
+
+problème
+catégorie
+localisation
+photos
+
+Statut :
+
+EN_ATTENTE
+UC06 – Consulter les demandes
+
+Acteur :
+
+Prestataire
+
+Le prestataire voit uniquement :
+
+les demandes ouvertes
+selon la catégorie
+éventuellement selon la localisation
+
+Il ne peut pas voir les demandes déjà attribuées ou terminées.
+
+UC07 – Prendre en charge une demande
+
+Acteur :
+
+Prestataire
+
+Le prestataire clique :
+
+Prendre en charge
+
+La demande devient :
+
+PRISE_EN_CHARGE
+
+Le prestataire devient responsable.
+
+➡️ C'est ici que je pense que le bug actuel se trouve.
+
+Aujourd'hui, d'après ce que tu décris, c'est l'admin qui valide les demandes des clients.
+
+Ce n'est pas logique.
+
+L'admin ne devrait jamais intervenir dans le cycle normal d'une demande.
+
+UC08 – Réaliser un diagnostic
+
+Acteur :
+
+Prestataire responsable
+
+Uniquement si :
+
+la demande est prise en charge
+
+Il peut créer :
+
+diagnostic
+
+Le client peut consulter le diagnostic.
+
+UC09 – Proposer une solution
+
+Acteur :
+
+Prestataire responsable
+
+Après le diagnostic :
+
+Le prestataire propose :
+
+solution
+coût
+durée
+
+Statut :
+
+PROPOSITION_ENVOYEE
+UC10 – Accepter la proposition
+
+Acteur :
+
+Client
+
+Deux choix :
+
+accepter
+
+↓
+
+Statut
+
+EN_INTERVENTION
+
+ou
+
+refuser
+
+↓
+
+Retour :
+
+PRISE_EN_CHARGE
+
+Le prestataire peut modifier son devis.
+
+UC11 – Réaliser l'intervention
+
+Acteur :
+
+Prestataire
+
+Début intervention.
+
+Puis
+
+Fin intervention.
+
+Statut :
+
+TERMINEE
+UC12 – Laisser un avis
+
+Acteur :
+
+Client
+
+Uniquement :
+
+si intervention terminée.
+
+UC13 – Consulter sa réputation
+
+Acteur :
+
+Prestataire
+
+Moyenne :
+
+étoiles
+commentaires
+UC14 – Gérer les catégories
+
+Acteur :
+
+Administrateur
+
+CRUD.
+
+UC15 – Gérer les utilisateurs
+
+Acteur :
+
+Administrateur
+
+Activation
+
+Blocage
+
+Suppression
+
+UC16 – Valider les inscriptions prestataires
+
+Acteur :
+
+Administrateur
+
+L'administrateur valide :
+
+la demande pour devenir prestataire.
+
+Uniquement cela.
+
+Il ne valide jamais les demandes de dépannage.
+
+UC17 – Consulter les statistiques
+
+Acteur :
+
+Administrateur
+
+Nombre :
+
+clients
+prestataires
+interventions
+demandes
+Cycle métier d'une demande
+
+Le workflow devrait être :
+
+Client
+    │
+    ▼
+Créer une demande
+    │
+    ▼
+EN_ATTENTE
+    │
+    ▼
+Prestataire consulte
+    │
+    ▼
+Prendre en charge
+    │
+    ▼
+PRISE_EN_CHARGE
+    │
+    ▼
+Diagnostic
+    │
+    ▼
+Proposition (solution + prix)
+    │
+    ▼
+Client accepte ?
+ ┌──────────────┐
+ │              │
+Non            Oui
+ │              │
+ ▼              ▼
+Retour      Intervention
+ │              │
+ └──────► Terminée
+               │
+               ▼
+          Avis client
+
+L'administrateur n'apparaît pas dans ce workflow, sauf pour la gestion globale (utilisateurs, catégories, validation des prestataires, statistiques).
+
+UC 18
+un user (client, prestataire) peut publier un produit pour le vendre

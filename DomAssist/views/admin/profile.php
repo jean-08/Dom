@@ -1,31 +1,37 @@
-<?php require __DIR__ . '/../layout/header.php'; ?>
-<h2>Mon Profil Admin</h2>
-<p style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
-  ℹ️ Vous ne pouvez modifier que votre mot de passe.
-</p>
+<?php
+$pageTitle = 'Mon profil';
+$pageSubtitle = 'Compte administrateur';
+$active = 'admin_profile';
+require __DIR__ . '/../layouts/header.php';
+?>
 
-<form method="POST" style="max-width: 400px;">
-  <h3>Informations personnelles</h3>
-  <p><strong>Nom :</strong> <?= htmlspecialchars($admin['nom']) ?></p>
-  <p><strong>Prénom :</strong> <?= htmlspecialchars($admin['prenom']) ?></p>
-  <p><strong>Email :</strong> <?= htmlspecialchars($admin['email']) ?></p>
-  <p><strong>Rôle :</strong> <?= htmlspecialchars($admin['role']) ?></p>
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="da-card p-4 mb-3">
+      <h6 class="mb-3">Informations</h6>
+      <p class="mb-1"><strong>Nom :</strong> <?= htmlspecialchars($admin['prenom'] . ' ' . $admin['nom']) ?></p>
+      <p class="mb-0"><strong>Email :</strong> <?= htmlspecialchars($admin['email']) ?></p>
+    </div>
 
-  <hr>
+    <div class="da-card p-4">
+      <h6 class="mb-3">Changer le mot de passe</h6>
+      <form method="POST" action="index.php?action=admin_profile">
+        <div class="mb-3">
+          <label class="form-label">Ancien mot de passe</label>
+          <input type="password" name="ancien_mdp" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Nouveau mot de passe</label>
+          <input type="password" name="nouveau_mdp" class="form-control" minlength="6" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Confirmer le nouveau mot de passe</label>
+          <input type="password" name="confirmer_mdp" class="form-control" minlength="6" required>
+        </div>
+        <button type="submit" class="btn btn-brand"><i class="bi bi-shield-check me-1"></i>Mettre à jour</button>
+      </form>
+    </div>
+  </div>
+</div>
 
-  <h3>Changer le mot de passe</h3>
-  
-  <label>Ancien mot de passe</label>
-  <input type="password" name="ancien_mdp" required style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;">
-
-  <label>Nouveau mot de passe</label>
-  <input type="password" name="nouveau_mdp" required style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;">
-
-  <label>Confirmer le mot de passe</label>
-  <input type="password" name="confirmer_mdp" required style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;">
-
-  <button type="submit" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Modifier le mot de passe</button>
-</form>
-
-<a href="index.php?action=admin_dashboard" style="margin-top: 20px; display: inline-block;">← Retour</a>
-<?php require __DIR__ . '/../layout/footer.php'; ?>
+<?php require __DIR__ . '/../layouts/footer.php'; ?>
