@@ -38,8 +38,10 @@ DomAssist est une application web de mise en relation entre clients et prestatai
 
 2. Importer la base de données :
    ```bash
-   createdb -U <user> domassist
-   psql -U <user> -d domassist -f DomAssist.sql
+   sudo -iu postgres psql
+   create database domassist owner <user>;
+   exit;
+   psql -U <user> -d domassist -f DomAssist.sql;
    ```
 
 3. Configurer la connexion PostgreSQL :
